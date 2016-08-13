@@ -12,7 +12,7 @@ http.createServer(function(req, res) {
 		req.on('data', (chunk)=> {
 			body += chunk
 		})
-		req.on('end', ()=> {
+		req.on('end', ()=> { 
 			let filename = Date.now()
 			let json = decodeBase64Image(body)
 			if(!json) res.end(makeJsonStr(500, 'error base64'));
