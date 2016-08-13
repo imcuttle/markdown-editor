@@ -18,7 +18,7 @@
 <script src="http://cdn.bootcss.com/ace/1.2.4/ace.js"></script>
 <script src="http://cdn.bootcss.com/marked/0.3.6/marked.min.js"></script>
 <script type="text/javascript" src="http://cdn.bootcss.com/highlight.js/8.0/highlight.min.js"></script>
-<script type="text/javascript" src="diff_match_patch.js"></script>
+<!-- <script type="text/javascript" src="diff_match_patch.js"></script> -->
 <script>
 !function (w, d) {
 	var editorDom = document.querySelector('#editor')
@@ -59,7 +59,26 @@
 	editor.autosave = w.localStorage['editor_autosave']=='true'
     editor.getSession().setMode("ace/mode/markdown")
     editor.getSession().setUseWrapMode(true);
-	
+	function mydiff(baseText, text) {
+		var index, isNoDiff = true;
+		text.split('').some(function(ch, i) {
+			if(i > baseText.length-1) {
+				index = i
+				isNoDiff = false
+				return true
+			}
+			if(ch != baseText[i]) {
+				index = i
+				isNoDiff = false
+				return true
+			}
+			index = i
+		})
+		return {
+			index: index,
+			isNoDiff: isNoDiff
+		}
+	}
     editor.on('change', function(e) {
     	
     	//autosave
@@ -84,7 +103,7 @@
     	var curText = preview.children[1].innerText.replace(/[\n\s\t\r\b]/g, '')
 
     	if(editor.lastText) {
-    		
+    		/*
     		var diff = dmp.diff_main(editor.lastText, curText)
 
     		dmp.diff_cleanupEfficiency(diff)
@@ -101,6 +120,10 @@
     			isNoDiff = false
     			return true;
     		})
+    		*/
+    		var diff = mydiff(editor.lastText, curText)
+    		var modifyIndex = diff.index
+    		var isNoDiff = diff.isNoDiff
     	}
     	// console.log(curText, modifyIndex)
     	editor.lastText = curText
@@ -180,7 +203,7 @@
 		w.localStorage['editor_fontsize'] = editor.getFontSize()
 		w.localStorage['editor_autosave'] = editor.autosave
     }
-    var dmp = new diff_match_patch()
+    // var dmp = new diff_match_patch()
     editor.commands.addCommand({
     	name: 'toggle_autosave',
     	bindKey: {win: 'Ctrl-U', mac: 'Command-U'},

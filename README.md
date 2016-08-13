@@ -21,6 +21,10 @@
 [英文原版](http://simplygenius.net/Article/DiffTutorial1)  
 [翻译](http://yaowhat.com/2014/07/21/entry-version-diff-1.html)
 
+
+**2016/8/14 更新**  
+其实不需要使用`diff_match_patch.js`得到字符串之间所有的差异，我们只需要得到第一个不同的位置即可，所以改进为扫描一遍的方法，求第一个不同的位置，效率更佳
+
 ## 我的工作
 
 既然知道了sf的实时编辑高亮是基于diff的，那我也基于这个工具实现个markdown编辑器吧。 
@@ -68,4 +72,3 @@ open http://localhost:9999
 ```
 
 别忘了给个Star！
-
