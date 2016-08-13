@@ -1,0 +1,27 @@
+{
+  "name": "markdown-editor",
+  "version": "1.0.0",
+  "description": "[SegumentFault](https://segmentfault.com/) 中的Markdown编辑器用户体验不错，比如",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "moyu",
+  "license": "ISC",
+  "dependencies": {
+    "minimist": "^1.2.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moyuyc/markdown-editor.git"
+  },
+  "keywords": [
+    "markdown"
+  ],
+  "bugs": {
+    "url": "https://github.com/moyuyc/markdown-editor/issues"
+  },
+  "homepage": "https://github.com/moyuyc/markdown-editor#readme"
+}

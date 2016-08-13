@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<title>MarkDown Editor</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+<div id="editor">
+
+</div>
+
+<div id="preview">
+<div id="resize"></div>
+<div class="preview markdown-body"></div>
+</div>
+
+<script src="http://cdn.bootcss.com/ace/1.2.4/ace.js"></script>
+<script src="http://cdn.bootcss.com/marked/0.3.6/marked.min.js"></script>
+<script type="text/javascript" src="http://cdn.bootcss.com/highlight.js/8.0/highlight.min.js"></script>
+<script type="text/javascript" src="diff_match_patch.js"></script>
+<script>
+!function (w, d) {
+	var editorDom = document.querySelector('#editor')
+	var editorTip = document.createElement('div')
+	editorTip.className = 'editor-tip'
+	var editorLeftTip = document.createElement('div')
+	editorLeftTip.className = 'editor-tip-left'
+	var preview = document.querySelector('#preview')
+	var resize = document.querySelector('#resize')
+
+
+	d.body.addEventListener('mousedown', function(e) {
+		if(e.target.id === 'resize') {
+			e.target.isDown = true
+		}
+	}, false)
+	d.body.addEventListener('mouseup', function(e) {
+		resize.isDown = false
+	}, false)
+	d.body.addEventListener('mousemove', function(e) {
+		if(resize.isDown) {
+			var MINLEFT = w.innerWidth * .1,
+				MAXLEFT = w.innerWidth * .9;
+			var left = e.clientX <= MINLEFT ? MINLEFT : (e.clientX <= MAXLEFT ? e.clientX : MAXLEFT)
+
+			// editorDom.style.right = (w.innerWidth - left) + 'px'
+			editorDom.style.width = preview.style.left = left + 'px'
+			editor.resize(true)
+			resize.style.left = preview.style.left = left + 'px' 
+		}
+	}, false)
+
+
+    editor = ace.edit("editor");
+    editor.setTheme(w.localStorage['editor_theme'] || "ace/theme/monokai");
+    
+	w.localStorage['editor_fontsize'] && editor.setFontSize(Number(w.localStorage['editor_fontsize']));
+	editor.autosave = w.localStorage['editor_autosave']=='true'
+    editor.getSession().setMode("ace/mode/markdown")
+    editor.getSession().setUseWrapMode(true);
+	
+    editor.on('change', function(e) {
+    	
+    	//autosave
+    	if(editor.autosave) {
+	    	if(!editor.autosave_timer) {
+		    	editorLeftTip.innerText = '自动保存中...'
+		    	editor.autosave_timer = setTimeout(function() {
+		    		delete editor.autosave_timer
+		    		save();
+		    		editorLeftTip.innerText = '保存成功！'
+		    	}, 3500)
+	    	}
+    	} else {
+    		editorLeftTip.innerText = '自动保存已关闭'
+    	}
+
+
+    	editorTip.innerText = this.getValue().length
+
+    	preview.children[1].innerHTML = marked(this.getValue(), {renderer: renderer})
+
+    	var curText = preview.children[1].innerText.replace(/[\n\s\t\r\b]/g, '')
+
+    	if(editor.lastText) {
+    		
+    		var diff = dmp.diff_main(editor.lastText, curText)
+
+    		dmp.diff_cleanupEfficiency(diff)
+
+    		var modifyIndex = 0;
+    		var isNoDiff = true
+    		diff.some(function(d) {
+    			d[1] = d[1].replace(/[\n\s\t\r\b]/g, '')
+    			var l = d[1].length
+				modifyIndex += l ;
+    			if(d[0] == 0){
+    				return false;
+    			}
+    			isNoDiff = false
+    			return true;
+    		})
+    	}
+    	// console.log(curText, modifyIndex)
+    	editor.lastText = curText
+
+		if(modifyIndex) {
+			var findEl,s = ''
+			function explore (parentEl, index) {
+				[].slice.call(parentEl.childNodes).some(function(x) {
+					// console.info(x, index)
+					if(x.childElementCount>0) {
+						index = explore(x, index)
+					} else {
+						if(!!findEl) {
+							return true
+						}
+						if(x.tagName=='TEXTAREA') {
+							return;
+						}
+						var text = x.nodeType==3?x.nodeValue:x.innerText;
+						text = text.replace(/[\n\s\t\r\b]/g, '')
+						s += text
+						index += text.length
+
+						var fix = 0
+						if(x.nextElementSibling) {
+							var nextText = x.nextElementSibling.innerText;
+							// console.log('fix', text,' : ', nextText)
+							if(nextText[0]==text[text.length-1]) {
+								var a = nextText.match(new RegExp("^"+nextText[0]+"+"))
+								fix = a ? a[0].length : 0
+							}
+						}
+						if(index+fix>=modifyIndex) {
+							findEl = x;
+							return true;
+						}
+					}
+				})
+				return index
+			}
+			var index = explore(preview.children[1], 0)
+
+			if(preview.timer) {
+				clearTimeout(preview.timer)
+			}
+			if(!isNoDiff) {
+				if(!findEl || findEl.nodeType == 3) {
+					findEl = !findEl ? preview.children[1].lastElementChild : findEl.parentElement
+				}
+				if(findEl) {
+					if(findEl.parentElement.tagName == 'CODE')
+						findEl = findEl.parentElement
+					if(findEl.tagName == 'CODE')
+						findEl = findEl.parentElement
+					findEl.style.backgroundColor = 'rgb(217, 237, 247)'
+					preview.timer = setTimeout(function() {
+						findEl.style.backgroundColor = ''
+					}, 5000)
+
+					var r = findEl.getBoundingClientRect()
+
+					if(!(r.top>=-r.height && r.top<=w.innerHeight-r.height)) {
+						console.log('can\'t see!!', findEl, r.top, preview.children[1].clientHeight )
+						preview.scrollTop = findEl.offsetTop - r.height - 20
+					}
+				}
+			}
+
+		}
+    	renderer.headmap = {}
+
+    }.bind(editor))
+    
+    function save() {
+    	w.localStorage['editor_value'] = editor.getValue()
+		w.localStorage['editor_theme'] = editor.getTheme()
+		w.localStorage['editor_fontsize'] = editor.getFontSize()
+		w.localStorage['editor_autosave'] = editor.autosave
+    }
+    var dmp = new diff_match_patch()
+    editor.commands.addCommand({
+    	name: 'toggle_autosave',
+    	bindKey: {win: 'Ctrl-U', mac: 'Command-U'},
+    	exec: function(editor) {
+    		editor.autosave = !editor.autosave
+    		if(!editor.autosave)
+    			editorLeftTip.innerText = '自动保存已关闭'
+    		else
+    			editorLeftTip.innerText = '自动保存已启动'
+    	},
+    	readOnly: false
+    })
+    editor.commands.addCommand({
+    	name: 'save',
+    	bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
+    	exec: function(editor) {
+    		save()
+    	},
+    	readOnly: false
+    })
+    editor.commands.addCommand({
+    	name: 'bigger',
+    	bindKey: {win: 'Ctrl-B', mac: 'Command-B'},
+    	exec: function(editor) {
+    		editor.setFontSize(1+editor.getFontSize())
+    	},
+    	readOnly: false
+    })
+    editor.commands.addCommand({
+    	name: 'smaller',
+    	bindKey: {win: 'Ctrl-M', mac: 'Command-M'},
+    	exec: function(editor) {
+    		if(editor.getFontSize()<=12) return;
+    		editor.setFontSize(editor.getFontSize()-1)
+    	},
+    	readOnly: false
+    })
+    editor.commands.addCommand({
+    	name: 'changeTheme',
+    	bindKey: {win: 'Ctrl-K', mac: 'Command-K'},
+    	exec: function(editor) {
+			var themes = [
+				'ace/theme/ambiance',
+				'ace/theme/chrome',
+				'ace/theme/clouds',
+				'ace/theme/clouds_midnight',
+				'ace/theme/cobalt',
+				'ace/theme/crimson_editor',
+				'ace/theme/dawn',
+				'ace/theme/dreamweaver',
+				'ace/theme/eclipse',
+				'ace/theme/idle_fingers',
+				'ace/theme/iplastic',
+				'ace/theme/katzenmilch',
+				'ace/theme/kr_theme',
+				'ace/theme/kuroir',
+				'ace/theme/merbivore',
+				'ace/theme/merbivore_soft',
+				'ace/theme/pastel_on_dark',
+				'ace/theme/solarized_dark',
+				'ace/theme/solarized_light',
+				'ace/theme/sqlserver',
+				'ace/theme/textmate',
+				'ace/theme/tomorrow',
+				'ace/theme/tomorrow_night',
+				'ace/theme/tomorrow_night_blue',
+				'ace/theme/tomorrow_night_bright',
+				'ace/theme/tomorrow_night_eighties',
+				'ace/theme/vibrant_ink',
+				'ace/theme/xcode',
+				'ace/theme/chaos',
+				'ace/theme/monokai',
+				'ace/theme/terminal',
+				'ace/theme/twilight'
+			]
+
+    		var i = prompt('请输入主题标号(1-'+themes.length+')', 0)
+    		if(i==null) return;
+    		i = i<0 ? 0 : i
+    		i = i>=themes.length ? themes.length-1 : i
+    		editor.setTheme(themes[i])
+    		w.localStorage['editor_theme'] = themes[i]
+    		setTimeout(function() {
+    			editorTip.style.color = w.getComputedStyle(editorDom)['color']
+    			editorLeftTip.style.color = editorTip.style.color 
+    		}, 200)
+    		
+    	},
+    	readOnly: false
+    })
+    
+
+
+    document.querySelector('.markdown-body')
+    	.addEventListener('click', function(e) {
+    		if(e.target.classList.contains('pre-before')) {
+    			var input = e.target.nextElementSibling
+    			input.style.display='inline';
+    			input.select();
+    			d.execCommand('copy')
+    			input.style.display='none';
+    			e.target.innerText = 'Copied'
+    			if(e.target.timer) clearTimeout(e.target.timer)
+    			e.target.timer = setTimeout(function(){
+    				e.target.innerText = "Copy"
+    			}, 2000)
+    		}
+    	}, false)
+
+    setTimeout(function () {
+    	var styles = getComputedStyle(editor.container)
+    	// preview.style.backgroundColor = styles['background-color']	
+    	editorTip.style.color = styles['color']
+    	editorLeftTip.style.color = styles['color']
+    	var c = editorDom.querySelector('.ace_scroller')
+    	c.appendChild(editorTip)
+    	c.appendChild(editorLeftTip)
+
+    	editorTip.innerText = editor.getValue().length
+
+    	editorDom.addEventListener('paste', function(e) {
+	    	if(e.target.tagName=='TEXTAREA') {
+		    	var items, pastedData, clipboardData;
+		            // Get pasted data via clipboard API
+		        clipboardData = e.clipboardData || window.clipboardData;
+		        items = clipboardData.items;
+				
+		        [].slice.call(items).some(function(item) {
+		        	
+		        	if(/^image\//.test(item.type) && item.kind === 'file') {
+		        		// console.log(item);
+		        		e.preventDefault();
+		        		var blob = item.getAsFile();
+		        		var reader = new FileReader();
+		        		reader.onload = function(event){
+							post("/api/upload", reader.result ,function (data) {
+								console.log(data)
+								data = JSON.parse(data)
+								var url = data.message
+								document.execCommand('insertText', false, "![ClipboardImage]("+url+")");
+							})
+		                }
+		        		reader.readAsDataURL(blob);
+		        		return true
+		        	}
+		        })
+	        }
+	        // e.preventDefault()
+	        e.stopPropagation()
+	    }, true)
+    }, 600)
+    
+	w.addEventListener('load', function() {
+		var left = w.innerWidth * .5;
+		editorDom.style.width = preview.style.left = left + 'px'
+		editor.resize(true)
+		resize.style.left = preview.style.left = left + 'px' 
+	})
+	/*
+	marked.setOptions({
+        gfm: true,
+        tables: true,
+        breaks: false, //回车换行
+        pedantic: false,
+        sanitize: true,
+        smartLists: true,
+        smartypants: false,
+    });
+    */
+	var renderer = new marked.Renderer();
+	renderer.code=function (code,lang) {
+        var before = '<div class="pre-before">Copy</div>';
+
+        var input = d.createElement('textarea')
+        input.style.display='none'
+        input.innerHTML = code
+        
+        return '<pre>' + before + input.outerHTML + 
+            '<code>'+hljs.highlightAuto(code).value+'</code></pre>';
+    };
+    renderer.headmap = {}
+    renderer.heading = function (text, level) {
+    	var map = renderer.headmap;
+        var escapedText = text.toLowerCase();
+        if(!!map[text])
+            escapedText+='-'+map[text]++;
+        else
+            map[text]=1;
+        escapedText = ''
+        return '<h' + level + '><a name="' +
+            escapedText +
+            '" class="anchor" href="#' +
+            escapedText +
+            '"><span class="header-link"></span></a>' +
+            text + '</h' + level + '>';
+    };
+    
+    editor.setValue(w.localStorage['editor_value'] || "markdown editor")
+    editor.focus()
+
+	function post(url, data, cb) {
+		var xhr = new XMLHttpRequest()
+		xhr.open('POST', url, true)
+		xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xhr.send(data)
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState==4 && xhr.status==200) {
+				cb(xhr.responseText)
+			}
+		}
+	}
+
+}(window, document)
+
+</script>
+</body>
+</html>
