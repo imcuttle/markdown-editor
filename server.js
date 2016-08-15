@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+
 var http = require('http')
 var fs = require('fs')
 var argv = require('minimist')(process.argv.slice(2))
