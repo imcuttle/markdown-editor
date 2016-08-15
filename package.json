@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/moyuyc/markdown-editor/issues"
   },
-  "homepage": "https://github.com/moyuyc/markdown-editor#readme"
+  "homepage": "https://github.com/moyuyc/markdown-editor#readme",
+  "bin": {
+    "md-editor": "index.js"
+  }
 }

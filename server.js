@@ -2,8 +2,8 @@ var http = require('http')
 var fs = require('fs')
 var argv = require('minimist')(process.argv.slice(2))
 
-
 const imagePath = require('path').resolve(__dirname, 'upload')
+
 http.createServer(function(req, res) {
 	console.log(req.url);
 	var path = req.url == '/' ? 'index.html' : req.url.slice(1);
