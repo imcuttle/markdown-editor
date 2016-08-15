@@ -33,10 +33,12 @@
 	d.body.addEventListener('mousedown', function(e) {
 		if(e.target.id === 'resize') {
 			e.target.isDown = true
+			resize.classList.remove('active')
 		}
 	}, false)
 	d.body.addEventListener('mouseup', function(e) {
 		resize.isDown = false
+		resize.classList.remove('active')
 	}, false)
 	d.body.addEventListener('mousemove', function(e) {
 		if(resize.isDown) {
@@ -47,6 +49,7 @@
 			// editorDom.style.right = (w.innerWidth - left) + 'px'
 			editorDom.style.width = preview.style.left = left + 'px'
 			editor.resize(true)
+			resize.classList.add('active')
 			resize.style.left = preview.style.left = left + 'px' 
 		}
 	}, false)
@@ -100,7 +103,7 @@
 
     	preview.children[1].innerHTML = marked(this.getValue(), {renderer: renderer})
 
-    	var curText = preview.children[1].innerText.replace(/[\n\s\t\r\b]/g, '')
+    	var curText = preview.children[1].innerText.replace(/[\n\r\s]/g, '')
 
     	if(editor.lastText) {
     		/*
@@ -127,6 +130,7 @@
     	}
     	// console.log(curText, modifyIndex)
     	editor.lastText = curText
+    	
 
 		if(modifyIndex) {
 			var findEl,s = ''
@@ -143,7 +147,7 @@
 							return;
 						}
 						var text = x.nodeType==3?x.nodeValue:x.innerText;
-						text = text.replace(/[\n\s\t\r\b]/g, '')
+						text = text.replace(/[\n\r\s]/g, '')
 						s += text
 						index += text.length
 

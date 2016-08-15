@@ -33,7 +33,7 @@
 	    	user-select: none;
 	    	-webkit-user-select: none;
 	    }
-	    #resize:hover {
+	    #resize.active {
 	    	border-left: 2px solid #dadada;
 	    }
 	    #preview {
