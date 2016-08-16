@@ -32,7 +32,7 @@ http.createServer(function(req, res) {
 		})
 
 	}else {
-		fs.readFile(path, (err, data) => {
+		fs.readFile(require('path').resolve(__dirname, path), (err, data) => {
 			if(err) {
 				console.error(err)
 				res.end();
@@ -42,6 +42,7 @@ http.createServer(function(req, res) {
 		})
 	}
 }).listen(argv.p || 9999, function () {
+	console.log('path: ', __dirname)
 	console.log(`http://localhost:${argv.p || 9999}`)
 })
 function makeJsonStr(code,message) {

@@ -64,10 +64,8 @@
 [markdown-editor](https://github.com/moyuyc/markdown-editor)
 
 ```sh
-git clone https://github.com/moyuyc/markdown-editor.git
-cd markdown-editor
-npm install
-npm start
+npm i moyu-markdown-editor -g
+md-editor
 open http://localhost:9999
 ```
 
