@@ -148,7 +148,8 @@
 						}
 						var text = x.nodeType==3?x.nodeValue:x.innerText;
 						if(x.nodeType==8) {
-							text = '<!--'+x.nodeValue+'-->'
+							text = x.nodeValue
+							console.log(text)
 						}
 						text = text.replace(/[\n\r\s]/g, '')
 						s += text
