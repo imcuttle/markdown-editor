@@ -65,7 +65,7 @@
 
 ```sh
 npm i moyu-markdown-editor -g
-md-editor
+md-editor -p 9999
 open http://localhost:9999
 ```
 

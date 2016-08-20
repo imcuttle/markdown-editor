@@ -1,6 +1,6 @@
 {
   "name": "moyu-markdown-editor",
-  "version": "1.0.101",
+  "version": "1.0.13",
   "description": "[SegumentFault](https://segmentfault.com/) 中的Markdown编辑器用户体验不错，比如",
   "main": "server.js",
   "scripts": {
@@ -10,7 +10,8 @@
   "author": "moyuyc",
   "license": "ISC",
   "dependencies": {
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "qiniu": "^6.1.11"
   },
   "devDependencies": {},
   "repository": {

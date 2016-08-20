@@ -5,7 +5,7 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-
+<!--<a style="position: absolute; top: 0;" href="file:///Users/baidu/WebstormProjects/funny-something/markdown-editor">查看本地图片</a>-->
 <div id="editor">
 
 </div>
@@ -147,6 +147,9 @@
 							return;
 						}
 						var text = x.nodeType==3?x.nodeValue:x.innerText;
+						if(x.nodeType==8) {
+							text = '<!--'+x.nodeValue+'-->'
+						}
 						text = text.replace(/[\n\r\s]/g, '')
 						s += text
 						index += text.length
@@ -331,7 +334,7 @@
     	editorDom.addEventListener('paste', function(e) {
 	    	if(e.target.tagName=='TEXTAREA') {
 		    	var items, pastedData, clipboardData;
-		            // Get pasted data via clipboard API
+				// Get pasted data via clipboard API
 		        clipboardData = e.clipboardData || window.clipboardData;
 		        items = clipboardData.items;
 				
@@ -404,14 +407,15 @@
             '"><span class="header-link"></span></a>' +
             text + '</h' + level + '>';
     };
-    
-    editor.setValue(w.localStorage['editor_value'] || "markdown editor")
-    editor.focus()
+
+	var s = w.localStorage['editor_value'] || "markdown editor"
+    editor.setValue(s)
+//    editor.focus()
 
 	function post(url, data, cb) {
 		var xhr = new XMLHttpRequest()
 		xhr.open('POST', url, true)
-		xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xhr.send(data)
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState==4 && xhr.status==200) {
