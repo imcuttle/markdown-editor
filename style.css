@@ -1,6 +1,23 @@
 	    body {
 	    	overflow-x: hidden;
 	    }
+        .hide {
+            display: none;
+        }
+        #preview.full {
+            position: absolute;
+            left: 0!important;
+            right: 0;
+            bottom: 0;
+            top: 0;
+        }
+		#preview:-webkit-full-screen {
+			position: absolute;
+            left: 0!important;
+            right: 0;
+            bottom: 0;
+            top: 0;
+		}
 	    #editor { 
 	        position: absolute;
 	        top: 0;
@@ -614,6 +631,9 @@
 		}
 
 		.markdown-body img {
+		  display: block;
+		  margin: 10px auto;
+		  border: .3em solid #eee;
 		  max-width: 100%;
 		  -moz-box-sizing: border-box;
 		  box-sizing: border-box;

@@ -3,6 +3,7 @@
 ### Example user template
 
 node_modules/
+ace-build/
 
 # IntelliJ project files
 .idea

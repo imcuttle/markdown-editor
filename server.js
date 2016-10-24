@@ -2,12 +2,16 @@
 
 var http = require('http')
 var fs = require('fs')
+var Path = require('path');
 var argv = require('minimist')(process.argv.slice(2))
 
-const imagePath = require('path').resolve(__dirname, 'upload')
+const imagePath = Path.resolve((!argv._ && '.' || argv._[0]), 'upload')
+!fs.existsSync(imagePath) && fs.mkdirSync(imagePath);
+
+
 
 http.createServer(function(req, res) {
-	console.log(req.url);
+	// console.log(req.url);
 	var path = req.url == '/' ? 'index.html' : req.url.slice(1);
 	if(path=='api/upload' && req.method == 'POST') {
 		let body = ''
@@ -19,6 +23,7 @@ http.createServer(function(req, res) {
 			let json = decodeBase64Image(body)
 			if(!json) res.end(makeJsonStr(500, 'error base64'));
 			else {
+				
 				fs.writeFile(`${imagePath}/${filename}.${json.type}`, json.data, function (err) {
 					if(err){
 						console.error(err);
@@ -30,8 +35,17 @@ http.createServer(function(req, res) {
 			}
 		})
 
-	}else {
-		fs.readFile(require('path').resolve(__dirname, path), (err, data) => {
+	} else {
+		var root = __dirname;
+		if(path.startsWith('upload/')) {
+			root = imagePath
+			path = path.replace('upload/', '');
+		}
+		if(path==='style.css') {
+			res.writeHead(200, {'content-type': 'text/css'})
+		}	
+		fs.readFile( Path.resolve(root, path), (err, data) => {
+				
 			if(err) {
 				console.error(err)
 				res.end();
@@ -41,7 +55,8 @@ http.createServer(function(req, res) {
 		})
 	}
 }).listen(argv.p || 9999, function () {
-	console.log('path: ', __dirname)
+	console.log('path: ', __dirname);
+	console.log('images store path: ', imagePath);
 	console.log(`http://localhost:${argv.p || 9999}`)
 })
 function makeJsonStr(code,message) {

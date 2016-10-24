@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
+	<meta charset="utf-8">
 	<title>MarkDown Editor</title>
 	<link rel="stylesheet" type="text/css" href="style.css">
+	<style>
+		#editor {
+			font-family:monospace!important
+		}
+	</style>
 </head>
 <body>
 <!--<a style="position: absolute; top: 0;" href="file:///Users/baidu/WebstormProjects/funny-something/markdown-editor">查看本地图片</a>-->
@@ -15,7 +21,10 @@
 <div class="preview markdown-body"></div>
 </div>
 
-<script src="http://cdn.bootcss.com/ace/1.2.4/ace.js"></script>
+<script src="src-noconflict/ace.js"></script>
+<!-- <script src="//cdn.bootcss.com/ace/1.2.5/mode-markdown.js"></script> -->
+<!-- <script src="//cdn.bootcss.com/ace/1.2.5/mode-autohotkey.js"></script> -->
+
 <script src="http://cdn.bootcss.com/marked/0.3.6/marked.min.js"></script>
 <script type="text/javascript" src="http://cdn.bootcss.com/highlight.js/8.0/highlight.min.js"></script>
 <!-- <script type="text/javascript" src="diff_match_patch.js"></script> -->
@@ -26,9 +35,19 @@
 	editorTip.className = 'editor-tip'
 	var editorLeftTip = document.createElement('div')
 	editorLeftTip.className = 'editor-tip-left'
-	var preview = document.querySelector('#preview')
+	preview = document.querySelector('#preview')
 	var resize = document.querySelector('#resize')
-
+	function launchIntoFullscreen(element) {
+		if(element.requestFullscreen) {
+			element.requestFullscreen();
+		} else if(element.mozRequestFullScreen) {
+			element.mozRequestFullScreen();
+		} else if(element.webkitRequestFullscreen) {
+			element.webkitRequestFullscreen();
+		} else if(element.msRequestFullscreen) {
+			element.msRequestFullscreen();
+		}
+	}
 
 	d.body.addEventListener('mousedown', function(e) {
 		if(e.target.id === 'resize') {
@@ -42,8 +61,8 @@
 	}, false)
 	d.body.addEventListener('mousemove', function(e) {
 		if(resize.isDown) {
-			var MINLEFT = w.innerWidth * .1,
-				MAXLEFT = w.innerWidth * .9;
+			var MINLEFT = w.innerWidth * .0 + 10,
+				MAXLEFT = w.innerWidth * 1 - 10;
 			var left = e.clientX <= MINLEFT ? MINLEFT : (e.clientX <= MAXLEFT ? e.clientX : MAXLEFT)
 
 			// editorDom.style.right = (w.innerWidth - left) + 'px'
@@ -56,6 +75,7 @@
 
 
     editor = ace.edit("editor");
+    editor.$blockScrolling = Infinity
     editor.setTheme(w.localStorage['editor_theme'] || "ace/theme/monokai");
     
 	w.localStorage['editor_fontsize'] && editor.setFontSize(Number(w.localStorage['editor_fontsize']));
@@ -82,6 +102,8 @@
 			isNoDiff: isNoDiff
 		}
 	}
+
+
     editor.on('change', function(e) {
     	
     	//autosave
@@ -100,6 +122,11 @@
 
 
     	editorTip.innerText = this.getValue().length
+
+
+    	if(editor.closePreview) {
+    		return;
+    	}
 
     	preview.children[1].innerHTML = marked(this.getValue(), {renderer: renderer})
 
@@ -203,6 +230,8 @@
 		}
     	renderer.headmap = {}
 
+
+
     }.bind(editor))
     
     function save() {
@@ -224,6 +253,15 @@
     	},
     	readOnly: false
     })
+	/*document.addEventListener('keydown', function (e) {
+		if(e.shiftKey && e.keyCode === 70) {
+//			launchIntoFullscreen(preview)
+			e.preventDefault()
+			preview.classList.toggle('full')
+			editorDom.classList.toggle('hide')
+			resize.classList.toggle('hide')
+		}
+	}, true)*/
     editor.commands.addCommand({
     	name: 'save',
     	bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
@@ -237,6 +275,15 @@
     	bindKey: {win: 'Ctrl-B', mac: 'Command-B'},
     	exec: function(editor) {
     		editor.setFontSize(1+editor.getFontSize())
+    	},
+    	readOnly: false
+    })
+    editor.commands.addCommand({
+    	name: 'previewToggle',
+    	bindKey: {win: 'Ctrl-P', mac: 'Command-P'},
+    	exec: function(editor) {
+    		editor.closePreview = !editor.closePreview;
+    		alert('editor.closePreview: '+editor.closePreview);
     	},
     	readOnly: false
     })
